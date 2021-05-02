@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from vispy import app, gloo
 from dataclasses import dataclass
 import numpy as np
