@@ -12,10 +12,8 @@ EPSILON = decimal.Decimal(1e-12)
 
 @dataclass
 class particle:
-    x: decimal.Decimal = decimal.Decimal(0.)
-    y: decimal.Decimal = decimal.Decimal(0.)
-    vx: decimal.Decimal = decimal.Decimal(0.)
-    vy: decimal.Decimal = decimal.Decimal(0.)
+    pos: np.array([decimal.Decimal(0.), decimal.Decimal(0.)])
+    speed: np.array([decimal.Decimal(0.), decimal.Decimal(0.)])
     charge: decimal.Decimal = decimal.Decimal(0.)
     mass: decimal.Decimal = decimal.Decimal(0.)
     active: bool = False
@@ -27,22 +25,21 @@ for i in range(10):
     parts.append(particle(0, 0, 0))
 
 
-parts[0].x = decimal.Decimal(0)
-parts[0].y = decimal.Decimal(1)
-parts[0].vx = decimal.Decimal(0.00005)
+parts[0].pos = np.array([decimal.Decimal(0.), decimal.Decimal(1.)])
+parts[0].speed = np.array([decimal.Decimal(0.00005), decimal.Decimal(0.)])
 parts[0].charge = decimal.Decimal(1e-11)
 parts[0].mass = decimal.Decimal(1e-3)
 parts[0].active = True
 
-parts[1].x = decimal.Decimal(0)
-parts[1].y = decimal.Decimal(0)
+parts[1].pos = np.array([decimal.Decimal(0.), decimal.Decimal(0.)])
+parts[1].speed = np.array([decimal.Decimal(0.), decimal.Decimal(0.)])
 parts[1].charge = decimal.Decimal(-3e-11)
 parts[1].active = True
 parts[1].mass = decimal.Decimal(10)
 parts[1].fixed = True
 
-parts[2].x = decimal.Decimal(2)
-parts[2].y = decimal.Decimal(0)
+parts[2].pos = np.array([decimal.Decimal(2.), decimal.Decimal(0.)])
+parts[2].speed = np.array([decimal.Decimal(0.), decimal.Decimal(0.)])
 parts[2].charge = decimal.Decimal(-3e-11)
 parts[2].active = True
 parts[2].mass = decimal.Decimal(10)
@@ -60,8 +57,8 @@ class Canvas(app.Canvas):
 
         for i in range(10):
             if parts[i].active:
-                self.program[f'px[{i}]'] = parts[i].x
-                self.program[f'py[{i}]'] = parts[i].y
+                self.program[f'px[{i}]'] = parts[i].pos[0]
+                self.program[f'py[{i}]'] = parts[i].pos[1]
                 self.program[f'pc[{i}]'] = parts[i].charge
 
         self.timer = app.Timer('auto', connect=self.on_timer, start=True)
@@ -73,34 +70,26 @@ class Canvas(app.Canvas):
         energy = decimal.Decimal(0)
         for i in range(10):
             if(parts[i].active):
-                fx = decimal.Decimal(0)
-                fy = decimal.Decimal(0)
-                ax = decimal.Decimal(0)
-                ay = decimal.Decimal(0)
+                f = np.array([decimal.Decimal(0.), decimal.Decimal(0.)])
+                a = np.array([decimal.Decimal(0.), decimal.Decimal(0.)])
 
                 for j in range(10):
                     if(i != j and parts[j].active):
                         val = decimal.Decimal(parts[i].charge * parts[j].charge * decimal.Decimal(9e9))
-                        dx = decimal.Decimal(parts[i].x - parts[j].x)
-                        dy = decimal.Decimal(parts[i].y - parts[j].y)
-                        dist = decimal.Decimal(dx ** 2 + dy ** 2)
-                        dist = dist.sqrt()
-                        fx += val / (dist ** 2) * (dx / dist)
-                        fy += val / (dist ** 2) * (dy / dist)
+                        d = parts[i].pos - parts[j].pos
+                        dist = np.linalg.norm(d)
+                        f += val / (dist ** 2) * (d / dist)
                         energy += (decimal.Decimal(8.99e9) * parts[i].charge * parts[j].charge) / (dist * decimal.Decimal(2))
 
                 if(not parts[i].fixed):
-                    ax = fx / parts[i].mass
-                    ay = fy / parts[i].mass
-                    parts[i].vx += ax * dt
-                    parts[i].vy += ay * dt
-                    parts[i].x += parts[i].vx * dt
-                    parts[i].y += parts[i].vy * dt
+                    a = f / parts[i].mass
+                    parts[i].speed += a * dt
+                    parts[i].pos += parts[i].speed * dt
 
-                energy += decimal.Decimal(0.5) * parts[i].mass * (parts[i].vx**2 + parts[i].vy**2)
+                energy += decimal.Decimal(0.5) * parts[i].mass * (parts[i].speed[0]**2 + parts[i].speed[1]**2)
 
-                self.program[f'px[{i}]'] = parts[i].x
-                self.program[f'py[{i}]'] = parts[i].y
+                self.program[f'px[{i}]'] = parts[i].pos[0]
+                self.program[f'py[{i}]'] = parts[i].pos[1]
                 self.program[f'pc[{i}]'] = parts[i].charge
 
         print(energy)  # print total system's energy
