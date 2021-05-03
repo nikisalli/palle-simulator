@@ -1,6 +1,6 @@
 # palle-simulator
 ## tl-dr 
-a verlet integration opengl based charged palle (balls) simulator and electric potential plotter
+a verlet integration opengl based charged particles simulator and electric potential plotter
 
 
 https://user-images.githubusercontent.com/31286021/116820343-ce433880-ab74-11eb-877b-9b396818884d.mp4
